@@ -1,0 +1,2 @@
+cd /d "C:\Users\fjfca\dev\HyperHide\HyperHideDrv" &msbuild "HyperHideDrv.vcxproj" /t:sdvViewer /p:configuration="Debug" /p:platform="x64" /p:SolutionDir="C:\Users\fjfca\dev\HyperHide" 
+exit %errorlevel% 
