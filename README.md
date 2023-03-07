@@ -49,7 +49,7 @@
 CVHide is open-source hypervisor based Anti-Anti-Debug plugin for x64dbg/x32dbg.
 
 # Compilation #
-In order to compile project you need  [WDK](https://docs.microsoft.com/en-us/windows-hardware/drivers/download-the-wdk "WDK") and Visual Studio 2019
+In order to compile project you need  [WDK](https://docs.microsoft.com/en-us/windows-hardware/drivers/download-the-wdk "WDK") and Visual Studio >= 2019
 
 # Support #
 CVHide supports all Windows versions from Windows 7 up to the newest version (x64 only).
