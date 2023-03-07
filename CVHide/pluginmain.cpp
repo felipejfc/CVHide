@@ -310,6 +310,7 @@ void MenuEntry(CBTYPE cbType, void* CallbackInfo)
             break;
         }
 
+        /*
         case MENU_HYPERVISOR_VISIBLE:
         {
             static BOOLEAN HypervisorPresent = TRUE;
@@ -318,6 +319,7 @@ void MenuEntry(CBTYPE cbType, void* CallbackInfo)
             g_CVHideDrv->SetHyperVisorVisibility(HypervisorPresent);
             break;
         }
+        */
 
         default:
         {
@@ -360,8 +362,8 @@ PLUG_EXPORT void plugsetup(PLUG_SETUPSTRUCT* setupStruct)
     g_Settings->Load(g_CVHideIniPath);
 
     _plugin_menuaddentry(hMenu, MENU_OPTIONS, "&Options");
-    _plugin_menuaddentry(hMenu, MENU_HYPERVISOR_VISIBLE, "&Hypervisor not visible");
-    _plugin_menuentrysetchecked(pluginHandle, MENU_HYPERVISOR_VISIBLE, 0);
+    //_plugin_menuaddentry(hMenu, MENU_HYPERVISOR_VISIBLE, "&Hypervisor not visible");
+    //_plugin_menuentrysetchecked(pluginHandle, MENU_HYPERVISOR_VISIBLE, 0);
 
     HRSRC Icon = FindResourceW(hinst, MAKEINTRESOURCEW(IDB_ICON), L"PNG");
     if (Icon != NULL)
