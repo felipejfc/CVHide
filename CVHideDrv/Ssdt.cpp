@@ -79,54 +79,7 @@ namespace SSDT
 		return AddressOfTargetFunction;
 	}
 
-	/*
-	#pragma warning (disable : 4100)
-	BOOLEAN HookWin32kSyscall(CONST CHAR* SyscallName, SHORT SyscallIndex, PVOID NewFunctionAddress, PVOID* OriginFunction, PHOOK& hook)
-	{
-		KAPC_STATE State;
-
-		PEPROCESS CsrssProcess = GetCsrssProcess();
-		KeStackAttachProcess((PRKPROCESS)CsrssProcess, &State);
-
-		PVOID AddressOfTargetFunction = (PVOID)((ULONG64)Win32kTable->ServiceTable + (Win32kTable->ServiceTable[SyscallIndex] >> 4));
-		if (AddressOfTargetFunction == NULL) {
-			KeUnstackDetachProcess(&State);
-			return FALSE;
-		}
-
-		PVOID CodeCave = (PVOID)Win32kCodeCaves[Win32kAlignIndex++]; //TODO better code for this
-
-		hook = (PHOOK)RtlAllocateMemory(true, sizeof(HOOKSTRUCT));
-		hook->addr = (ULONG_PTR)CodeCave;
-#ifdef _WIN64
-		hook->hook.mov = 0xB848;
-#else
-		hook->hook.mov = 0xB8;
-#endif
-		hook->hook.addr = (ULONG_PTR)NewFunctionAddress;
-		hook->hook.push = 0x50;
-		hook->hook.ret = 0xc3;
-		hook->SSDTindex = SyscallIndex;
-		hook->SSDTold = Win32kTable->ServiceTable[SyscallIndex];
-
-		*OriginFunction = AddressOfTargetFunction;
-
-		LONG newValue = (LONG)((ULONG_PTR)CodeCave - (ULONG_PTR)Win32kTable->ServiceTable);
-		newValue = (newValue << 4) | Win32kTable->ServiceTable[SyscallIndex] & 0xF;
-		hook->SSDTnew = newValue;
-
-		RtlCopyMemory(&hook->orig, CodeCave, sizeof(HOOKOPCODES));
-		RtlSuperCopyMemory(CodeCave, &hook->hook, sizeof(HOOKOPCODES));
-		RtlSuperCopyMemory(&Win32kTable->ServiceTable[SyscallIndex], &newValue, sizeof(newValue));
-		LogDebug("%s Codecave at 0x%llX Table is at 0x%llX IdxFunc 0x%X New Offset 0x%X Original 0x%llX", SyscallName, CodeCave, (ULONG64)Win32kTable->ServiceTable, SyscallIndex * sizeof(LONG), Win32kTable->ServiceTable[SyscallIndex] >> 4, AddressOfTargetFunction);
-
-		KeUnstackDetachProcess(&State);
-		return true;
-	}
-	*/
-
-	#pragma warning (disable : 4100)
-	BOOLEAN HookWin32kSyscall(CONST CHAR* SyscallName, SHORT SyscallIndex, PVOID NewFunctionAddress, PVOID* OriginFunction, PHOOK& hook)
+	BOOLEAN HookWin32kSyscall(CONST CHAR* SyscallName, SHORT SyscallIndex, PVOID NewFunctionAddress, PVOID* OriginFunction)
 	{
 		KAPC_STATE State;
 
@@ -139,33 +92,14 @@ namespace SSDT
 			return false;
 		}
 
+		// TODO Add x86 support
 		*OriginFunction = KeHook.Create((PCHAR)SyscallName, AddressOfTargetFunction, NewFunctionAddress);
 
-		//LogDebug("%s Original 0x%llX NewFunctionAddr 0x%llX OriginFunc 0x%llX", SyscallName, AddressOfTargetFunction, NewFunctionAddress, *OriginFunction);
+		LogDebug("%s Original 0x%llX NewFunctionAddr 0x%llX OriginFunc 0x%llX", SyscallName, AddressOfTargetFunction, NewFunctionAddress, *OriginFunction);
 
 		KeUnstackDetachProcess(&State);
 		return true;
 	}
-
-/*
-	BOOLEAN UnhookWin32kSyscall(PHOOK &hook)
-	{
-
-		KAPC_STATE State;
-		PEPROCESS CsrssProcess = GetCsrssProcess();
-		KeStackAttachProcess((PRKPROCESS)CsrssProcess, &State);
-
-		RtlSuperCopyMemory(&Win32kTable->ServiceTable[hook->SSDTindex], &hook->SSDTold, sizeof(hook->SSDTold));
-		if (NT_SUCCESS(RtlSuperCopyMemory((PVOID)hook->addr, hook->orig, sizeof(HOOKOPCODES))))
-		{
-			RtlFreeMemory(hook);
-			KeUnstackDetachProcess(&State);
-			return true;
-		}
-		KeUnstackDetachProcess(&State);
-		return false;
-	}
-	*/
 
 	BOOLEAN UnhookWin32kSyscall(CONST CHAR* SyscallName)
 	{
@@ -193,7 +127,6 @@ namespace SSDT
 		PVOID AddressOfTargetFunction = (PVOID)((ULONG64)NtTable->ServiceTable + (NtTable->ServiceTable[SyscallIndex] >> 4));
 		PVOID CodeCave = (PVOID)KernelCodeCaves[KernelAlignIndex++];
 
-		// TODO don't need this hook shit
 		hook = (PHOOK)RtlAllocateMemory(true, sizeof(HOOKSTRUCT));
 		hook->addr = (ULONG_PTR)CodeCave;
 #ifdef _WIN64
@@ -207,8 +140,6 @@ namespace SSDT
 		hook->SSDTold = NtTable->ServiceTable[SyscallIndex];
 		hook->SSDTindex = SyscallIndex;
 		
-		// TODO backup cave code? don't see the need
-		// put the hook in the code cave
 		RtlCopyMemory(&hook->orig, CodeCave, sizeof(HOOKOPCODES));
 		if (!NT_SUCCESS(RtlSuperCopyMemory(CodeCave, &hook->hook, sizeof(HOOKOPCODES))))
 		{
@@ -216,7 +147,6 @@ namespace SSDT
 			return FALSE;
 		}
 
-		// point the ssdt entry for the method to the cave
 		LONG newValue = (LONG)((ULONG_PTR)CodeCave - (ULONG_PTR)NtTable->ServiceTable);
 		newValue = (newValue << 4) | NtTable->ServiceTable[SyscallIndex] & 0xF;
 		hook->SSDTnew = newValue;

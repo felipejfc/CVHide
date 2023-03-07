@@ -1902,7 +1902,7 @@ BOOLEAN HookWin32kSyscalls()
 		SyscallInfo{0UL, "NtUserBuildHwndList", HookedNtUserBuildHwndList, (void**)&OriginalNtUserBuildHwndList, &NtUserBuildHwndListHook},
 		SyscallInfo{0UL, "NtUserFindWindowEx", HookedNtUserFindWindowEx, (void**)&OriginalNtUserFindWindowEx, &NtUserFindWindowExHook},
 		SyscallInfo{0UL, "NtUserQueryWindow", HookedNtUserQueryWindow, (void**)&OriginalNtUserQueryWindow, &NtUserQueryWindowHook},
-		SyscallInfo{0UL, "NtUserGetForegroundWindow", nullptr, nullptr, nullptr},
+		SyscallInfo{0UL, "NtUserGetForegroundWindow", nullptr, nullptr, nullptr}, // TODO fix
 		SyscallInfo{0UL, "NtUserGetThreadState", nullptr, nullptr},
 	};
 	if (g_CVHide.CurrentWindowsBuildNumber <= WINDOWS_7_SP1)
@@ -1929,12 +1929,11 @@ BOOLEAN HookWin32kSyscalls()
 		if (!syscallToHook.HookFunctionAddress)
 			continue;
 
-		if (!SSDT::HookWin32kSyscall(syscallToHook.SyscallName.data(), syscallToHook.SyscallNumber, syscallToHook.HookFunctionAddress, syscallToHook.OriginalFunctionAddress, *syscallToHook.Hook))
+		if (!SSDT::HookWin32kSyscall(syscallToHook.SyscallName.data(), syscallToHook.SyscallNumber, syscallToHook.HookFunctionAddress, syscallToHook.OriginalFunctionAddress))
 		{
 			LogError("%s hook failed", syscallToHook.SyscallName.data());
 			return FALSE;
 		}
-		//LogInfo("Hooked %s at address 0x%llX, original 0x%llX", syscallToHook.SyscallName.data(), (* (syscallToHook.Hook))->hook.addr, *syscallToHook.OriginalFunctionAddress);
 	}
 
 	return TRUE;

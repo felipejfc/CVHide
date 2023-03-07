@@ -6,7 +6,7 @@ namespace SSDT
 {
 	BOOLEAN FindCodeCaves();
 
-	BOOLEAN HookWin32kSyscall(CONST CHAR* SyscallName, SHORT SyscallIndex, PVOID NewFunctionAddress, PVOID* OriginFunction, PHOOK& hook);
+	BOOLEAN HookWin32kSyscall(CONST CHAR* SyscallName, SHORT SyscallIndex, PVOID NewFunctionAddress, PVOID* OriginFunction);
 
 	BOOLEAN UnhookNtSyscall(PHOOK &hook);
 	BOOLEAN UnhookWin32kSyscall(CONST CHAR* SyscallName);
