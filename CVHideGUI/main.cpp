@@ -47,38 +47,32 @@ static void PopulateHideInfo(HWND hwndDlg, HIDE_INFO& hideInfo)
 	hideInfo.ClearThreadBreakOnTerminationFlag = IsDlgButtonChecked(hwndDlg, IDC_CHK_CLEARTHREADBREAKONTERMINATIONFLAG) ? TRUE : FALSE;
 	hideInfo.SaveProcessHandleTracing = IsDlgButtonChecked(hwndDlg, IDC_CHK_SAVEPROCESSHANDLETRACING) ? TRUE : FALSE;
 	hideInfo.SaveProcessDebugFlags = IsDlgButtonChecked(hwndDlg, IDC_CHK_SAVEPROCESSDEBUGFLAGS) ? TRUE : FALSE;
-
-	EndDialog(hwndDlg, TRUE);
 }
 
-
+CVHideDrv drv;
+HIDE_INFO HideInfo;
 static void CVHideCall(HWND hwndDlg)
 {
-	CVHideDrv drv;
 	BOOL hDevice = drv.CreateHandleToDriver();
 	if (!hDevice)
 	{
 		MessageBoxA(hwndDlg, "Could not open CVHide handle...", "Driver loaded?", MB_ICONERROR);
 		return;
 	}
-    PHIDE_INFO HideInfo = (PHIDE_INFO)malloc(sizeof(HIDE_INFO));
-
-	HideInfo->Pid = (ULONG)GetDlgItemInt(hwndDlg, IDC_EDT_PID, 0, FALSE);
-	PopulateHideInfo(hwndDlg, *HideInfo);
-	drv.SetTargetPid(HideInfo->Pid);
+	HideInfo.Pid = (ULONG)GetDlgItemInt(hwndDlg, IDC_EDT_PID, 0, FALSE);
+	PopulateHideInfo(hwndDlg, HideInfo);
+	drv.SetTargetPid(HideInfo.Pid);
 	BOOLEAN res = drv.CallDriver(IOCTL_ADD_HIDER_ENTRY);
 	if (!res) {
 		MessageBoxA(hwndDlg, "Couldn't add entry in the driver", "Wrong PID?", MB_ICONERROR);
 		return;
 	}
-	res = drv.Hide(*HideInfo);
+	res = drv.Hide(HideInfo);
 	if (res) {
 		MessageBoxA(hwndDlg, "Hidden!", "Done", MB_ICONINFORMATION);
-		return;
 	}
 	else {
 		MessageBoxA(hwndDlg, "Error...", "Unknown cause", MB_ICONERROR);
-		return;
 	}
 	return;
 }
@@ -189,13 +183,13 @@ static BOOL CALLBACK DlgMain(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		}
 		case IDC_BTN_UNHIDE:
 		{
-			CVHideCall(hwndDlg);
+			//CVHideCall(hwndDlg); TODO fix unhide
 			return TRUE;
 		}
 
 		case IDC_BTN_UNHIDEALL:
 		{
-			CVHideCall(hwndDlg);
+			//CVHideCall(hwndDlg); TODO fix unhide
 			return TRUE;
 		}
 

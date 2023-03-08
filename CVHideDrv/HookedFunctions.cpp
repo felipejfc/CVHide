@@ -12,6 +12,7 @@
 #include "Ssdt.h"
 #include "HookedFunctions.h"
 #include "HookHelper.h"
+#include "KeHook.h"
 
 CONST PKUSER_SHARED_DATA KuserSharedData = (PKUSER_SHARED_DATA)KUSER_SHARED_DATA_USERMODE;
 
@@ -21,6 +22,7 @@ HANDLE (NTAPI * NtUserGetThreadState)(ULONG Routine);
 ULONG64 KiUserExceptionDispatcherAddress = 0;
 
 extern HYPER_HIDE_GLOBAL_DATA g_CVHide;
+extern _KeHook KeHook;
 
 NTSTATUS(NTAPI* OriginalNtQueryInformationProcess)(HANDLE ProcessHandle, PROCESSINFOCLASS ProcessInformationClass, PVOID ProcessInformation, ULONG ProcessInformationLength, PULONG ReturnLength);
 NTSTATUS NTAPI HookedNtQueryInformationProcess(
@@ -1736,7 +1738,6 @@ HANDLE NTAPI HookedNtUserGetForegroundWindow()
 	
 	return hWnd;
 }
-typedef VOID(NTAPI* KI_DISPATCH_EXCEPTION)(PEXCEPTION_RECORD ExceptionRecord, PKEXCEPTION_FRAME ExceptionFrame, PKTRAP_FRAME TrapFrame, KPROCESSOR_MODE PreviousMode, BOOLEAN FirstChance);
 VOID(NTAPI* OriginalKiDispatchException)(PEXCEPTION_RECORD ExceptionRecord, PKEXCEPTION_FRAME ExceptionFrame, PKTRAP_FRAME TrapFrame, KPROCESSOR_MODE PreviousMode, BOOLEAN FirstChance);
 VOID NTAPI HookedKiDispatchException(PEXCEPTION_RECORD ExceptionRecord, PKEXCEPTION_FRAME ExceptionFrame, PKTRAP_FRAME TrapFrame, KPROCESSOR_MODE PreviousMode, BOOLEAN FirstChance)
 {
@@ -2009,38 +2010,17 @@ BOOLEAN HookKiDispatchException()
 	{
 		KiDispatchExceptionAddress = (PVOID)(*(LONG*)((ULONG64)KiDispatchExceptionAddress + 12) + (LONGLONG)((ULONG64)KiDispatchExceptionAddress + 16));
 
-		LogInfo("KiDispatchException address: 0x%llx", KiDispatchExceptionAddress);
+		// TODO Add x86 support
+		OriginalKiDispatchException = (void(NTAPI*)(PEXCEPTION_RECORD ExceptionRecord, PKEXCEPTION_FRAME ExceptionFrame, PKTRAP_FRAME TrapFrame, KPROCESSOR_MODE PreviousMode, BOOLEAN FirstChance)) KeHook.Create((PCHAR)"KiDispatchException", KiDispatchExceptionAddress, HookedKiDispatchException);
 
-		//ULONG64 CodeCave = SSDT::KernelCodeCaves[SSDT::KernelAlignIndex++];
-
-		HOOK hook = (HOOK)RtlAllocateMemory(true, sizeof(HOOKSTRUCT));
-		hook->addr = (ULONG_PTR) KiDispatchExceptionAddress;
-#ifdef _WIN64
-		hook->hook.mov = 0xB848;
-#else
-		hook->hook.mov = 0xB8;
-#endif
-		hook->hook.addr = (ULONG_PTR)&HookedKiDispatchException;
-		hook->hook.push = 0x50;
-		hook->hook.ret = 0xc3;
-		//set original data
-		/*
-		RtlCopyMemory(&hook->orig, KiDispatchExceptionAddress, sizeof(HOOKOPCODES));
-		if (!NT_SUCCESS(RtlSuperCopyMemory(KiDispatchExceptionAddress, &hook->hook, sizeof(HOOKOPCODES))))
-		{
-			RtlFreeMemory(hook);
-			return false;
-		}
-		OriginalKiDispatchException = (KI_DISPATCH_EXCEPTION) KiDispatchExceptionAddress;
 		return true;
 	}
 	LogError("KiDispatchException hook failed");
 	return FALSE;
 }
-		*/
+*/
 
 BOOLEAN HookSyscalls()
 {
-	//  &&  HookKiDispatchException()  
-	return HookNtSyscalls() && HookWin32kSyscalls();
+	return HookNtSyscalls() && HookWin32kSyscalls(); //&&  HookKiDispatchException();
 }
