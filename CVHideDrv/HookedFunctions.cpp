@@ -1987,7 +1987,6 @@ BOOLEAN GetKiUserExceptionDispatcherAddress()
 	return TRUE;
 }
 
-/*
 BOOLEAN HookKiDispatchException()
 {
 	if (!GetKiUserExceptionDispatcherAddress())
@@ -2018,7 +2017,6 @@ BOOLEAN HookKiDispatchException()
 	LogError("KiDispatchException hook failed");
 	return FALSE;
 }
-*/
 
 BOOLEAN HookSyscalls()
 {
